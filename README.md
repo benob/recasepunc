@@ -46,7 +46,7 @@ Models
 
 Checkpoints can be downloaded from xxx.
 
-* French: fr-txt.large.19000 trained on 160M tokens from Common Crawl
+* French: [https://github.com/benob/recasepunc/releases/download/0.1/fr-txt.large.19000](fr-txt.large.19000) trained on 160M tokens from Common Crawl
   * Iterations: 19000
   * Batch size: 16
   * Max length: 256
@@ -61,6 +61,7 @@ Checkpoints can be downloaded from xxx.
     * Period F-score: 73.83 
     * Question F-score: 58.82
     * Exclamation mark F-score: 15.38
+  * Training data: First 100M words from [http://data.statmt.org/cc-100/fr.txt.xz]()
 
 
 Training 
