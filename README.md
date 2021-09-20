@@ -5,7 +5,7 @@ Benoit Favre 2021
 
 This system converts a sequence of lowercase tokens without punctuation to a sequence of cased tokens with punctuation.
 
-It is trained to predict both aspects at the token level in a multitask fashion, from fine-tuned Bart representations.
+It is trained to predict both aspects at the token level in a multitask fashion, from fine-tuned BERT representations.
 
 The model predicts the following recasing labels:
 - lower: keep lowercase
@@ -22,6 +22,11 @@ And the following punctuation labels:
 
 Input tokens are batched as sequences of length 256 that are processed independently without overlap.
 
+In training, batches containing less that 256 tokens are simulated by drawing
+uniformly a length and replacing all tokens and labels after that point with
+padding (called Cut-drop).
+
+
 Installation
 ------------
 
@@ -32,10 +37,11 @@ python -mvenv env
 pip3 install -r requirements.txt -f https://download.pytorch.org/whl/torch_stable.html
 ```
 
+
 Prediction
 ----------
 
-From raw text:
+Predict from raw text:
 ```
 python recasepunc.py predict checkpoint/path.iteration < input.txt > output.txt
 ```
@@ -43,8 +49,6 @@ python recasepunc.py predict checkpoint/path.iteration < input.txt > output.txt
 
 Models
 ------
-
-Checkpoints can be downloaded from xxx.
 
 * French: [https://github.com/benob/recasepunc/releases/download/0.1/fr-txt.large.19000](fr-txt.large.19000) trained on 160M tokens from Common Crawl
   * Iterations: 19000
@@ -67,6 +71,8 @@ Checkpoints can be downloaded from xxx.
 Training 
 --------
 
+Notes: You need to modify file names adequately.  Training tensors are precomputed and loaded in CPU memory.
+
 Stage 0: download text data
 
 Stage 1: tokenize and normalize text with Moses tokenizer, and extract recasing and repunctuation labels
@@ -74,7 +80,7 @@ Stage 1: tokenize and normalize text with Moses tokenizer, and extract recasing 
 python recasepunc.py preprocess < input.txt > input.case+punc
 ```
 
-Stage 2: sur-tokenize with Flaubert tokenizer, and generate pytorch tensors
+Stage 2: sub-tokenize with Flaubert tokenizer, and generate pytorch tensors
 ```
 python recasepunc.py tensorize input.case+punc input.case+punc.x input.case+punc.y
 ```
