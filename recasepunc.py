@@ -66,7 +66,7 @@ class Model(nn.Module):
 
     def forward(self, x):
         output = self.bert(x)
-        representations = self.dropout(F.gelu(output['previous_hidden_state']))
+        representations = self.dropout(F.gelu(output['last_hidden_state']))
         punc = self.punc(representations)
         case = self.case(representations)
         return punc, case

@@ -52,7 +52,7 @@ python recasepunc.py predict checkpoint/path.iteration < input.txt > output.txt
 Models
 ------
 
-* French: [fr-txt.large.19000](https://github.com/benob/recasepunc/releases/download/0.2/fr-txt.large.19000) trained on 160M tokens from Common Crawl
+* French: [fr-txt.large.19000](https://talep-archives.lis-lab.fr/transfer/models/recasepunc/fr-txt.large.19000) trained on 160M tokens from Common Crawl
   * Iterations: 19000
   * Batch size: 16
   * Max length: 256
