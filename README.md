@@ -26,6 +26,8 @@ In training, batches containing less that 256 tokens are simulated by drawing
 uniformly a length and replacing all tokens and labels after that point with
 padding (called Cut-drop).
 
+Changelong:
+* Fix generation when input is smaller than max length
 
 Installation
 ------------
@@ -50,21 +52,21 @@ python recasepunc.py predict checkpoint/path.iteration < input.txt > output.txt
 Models
 ------
 
-* French: [fr-txt.large.19000](https://github.com/benob/recasepunc/releases/download/0.1/fr-txt.large.19000) trained on 160M tokens from Common Crawl
+* French: [fr-txt.large.19000](https://github.com/benob/recasepunc/releases/download/0.2/fr-txt.large.19000) trained on 160M tokens from Common Crawl
   * Iterations: 19000
   * Batch size: 16
   * Max length: 256
   * Seed: 871253
   * Cut-drop probability: 0.1
-  * Train loss: 0.007630254164338112
-  * Valid loss: 0.016180261224508285
-  * Recasing accuracy: 96.63
-  * Punctuation accuracy: 94.96
-    * All punctuation F-score: 68.04
-    * Comma F-score: 67.87
-    * Period F-score: 73.83 
-    * Question F-score: 58.82
-    * Exclamation mark F-score: 15.38
+  * Train loss: 0.021128975618630648
+  * Valid loss: 0.015684964135289192
+  * Recasing accuracy: 96.73
+  * Punctuation accuracy: 95.02
+    * All punctuation F-score: 67.79
+    * Comma F-score: 67.94
+    * Period F-score: 72.91 
+    * Question F-score: 57.57
+    * Exclamation mark F-score: 15.78
   * Training data: First 100M words from [Common Crawl](http://data.statmt.org/cc-100/fr.txt.xz])
 
 
