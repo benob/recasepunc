@@ -1,4 +1,4 @@
-mosestokenizer==1.1.0
+git+https://github.com/benob/mosestokenizer.git
 numpy==1.19.5
 regex==2021.8.28
 torch==1.9.0+cu111
