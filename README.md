@@ -53,7 +53,7 @@ python recasepunc.py predict checkpoint/path < input.txt > output.txt
 Models
 ------
 
-All models are trained from the 1st 100M tokens from [Common Crawl](http://data.statmt.org/cc-100/])
+All models are trained from the 1st 100M tokens from [Common Crawl](http://data.statmt.org/cc-100/)
 
 [checkpoints/zh.24000](https://talep-archives.lis-lab.fr/transfer/models/recasepunc/zh.24000)
 ```
