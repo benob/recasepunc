@@ -122,3 +122,7 @@ Stage 4: evaluate performance on a test set
 python recasepunc.py eval checkpoint/path.iteration test.x test.y
 ```
 
+Notes
+-----
+
+This work was not published, but a similar model is described in "FullStop: Multilingual Deep Models for Punctuation Prediction", Frank et al, 2021.
