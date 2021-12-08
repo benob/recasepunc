@@ -1,8 +1,9 @@
 [tool.poetry]
 name = "recasepunc"
 version = "0.1.0"
-description = ""
-authors = ["Your Name <you@example.com>"]
+description = "Model for recasing and repunctuating ASR transcripts"
+authors = ["Benoit Favre 2021"]
+license = "BSD-3-Clause"
 
 [tool.poetry.dependencies]
 python = ">=3.7,<3.11"
