@@ -55,7 +55,7 @@ Models
 
 All models are trained from the 1st 100M tokens from [Common Crawl](http://data.statmt.org/cc-100/)
 
-[checkpoints/zh.24000](https://talep-archives.lis-lab.fr/transfer/models/recasepunc/zh.24000)
+[checkpoints/zh.24000](https://github.com/benob/recasepunc/releases/download/0.3/zh.24000)
 ```
 {
   "iteration": "24000",
@@ -68,7 +68,7 @@ All models are trained from the 1st 100M tokens from [Common Crawl](http://data.
 }
 ```
 
-[checkpoints/en.23000](https://talep-archives.lis-lab.fr/transfer/models/recasepunc/en.23000)
+[checkpoints/en.23000](https://github.com/benob/recasepunc/releases/download/0.3/en.23000)
 ```
 {
   "iteration": "23000",
@@ -81,7 +81,7 @@ All models are trained from the 1st 100M tokens from [Common Crawl](http://data.
 }
 ```
 
-[checkpoints/fr.22000](https://talep-archives.lis-lab.fr/transfer/models/recasepunc/fr.22000)
+[checkpoints/fr.22000](https://github.com/benob/recasepunc/releases/download/0.3/fr.22000)
 ```
 {
   "iteration": "22000",
