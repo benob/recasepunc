@@ -35,7 +35,7 @@ Installation
 
 Use your favourite method for installing Python requirements. For example:
 ```
-python -mvenv env
+python -m venv env
 . env/bin/activate
 pip3 install -r requirements.txt -f https://download.pytorch.org/whl/torch_stable.html
 ```
@@ -119,7 +119,7 @@ python recasepunc.py train train.x train.y valid.x valid.y checkpoint/path --lan
 
 Stage 4: evaluate performance on a test set 
 ```
-python recasepunc.py eval checkpoint/path.iteration test.x test.y
+python recasepunc.py eval test.x test.y checkpoint/path.iteration
 ```
 
 Notes
