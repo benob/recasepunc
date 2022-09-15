@@ -285,9 +285,9 @@ class CasePuncPredictor:
             self.config = Config(lang=lang, flavor=flavor, device=device)
         init(self.config)
 
-        self.model = Model(flavor, config.device)
+        self.model = Model(flavor, self.config.device)
         self.model.load_state_dict(loaded['model_state_dict'])
-        self.model.to(config.device)
+        self.model.to(self.config.device)
 
         self.rev_case = {b: a for a, b in case.items()}
         self.rev_punc = {b: a for a, b in punctuation.items()}
@@ -316,7 +316,7 @@ class CasePuncPredictor:
             for i, id, token, punc_label, case_label in zip(range(len(instance)), ids, instance,
                                                             y_pred1[0].tolist()[:len(instance)],
                                                             y_pred2[0].tolist()[:len(instance)]):
-                if id == cls_token_id or id == sep_token_id:
+                if id == self.config.cls_token_id or id == self.config.sep_token_id:
                     continue
                 if previous_label is not None and previous_label > 1:
                     if case_label in [case['LOWER'], case['OTHER']]:  # LOWER, OTHER
