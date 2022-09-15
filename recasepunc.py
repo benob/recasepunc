@@ -35,6 +35,7 @@ default_flavors = {
     'fr': 'flaubert/flaubert_base_uncased',
     'en': 'bert-base-uncased',
     'zh': 'ckiplab/bert-base-chinese',
+    'it': 'dbmdz/bert-base-italian-uncased',
 }
 
 class Config(argparse.Namespace):
@@ -44,7 +45,7 @@ class Config(argparse.Namespace):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-        assert self.lang in ['fr', 'en', 'zh']
+        assert self.lang in ['fr', 'en', 'zh', 'it']
 
         if 'lang' in kwargs and ('flavor' not in kwargs or kwargs['flavor'] is None):
             self.flavor = default_flavors[self.lang]
@@ -718,7 +719,7 @@ if __name__ == '__main__':
     parser.add_argument("action", help="train|eval|predict|tensorize|preprocess", type=str)
     parser.add_argument("action_args", help="arguments for selected action", type=str, nargs='*')
     parser.add_argument("--seed", help="random seed", default=default_config.seed, type=int)
-    parser.add_argument("--lang", help="language (fr, en, zh)", default=default_config.lang, type=str)
+    parser.add_argument("--lang", help="language (fr, en, zh, it)", default=default_config.lang, type=str)
     parser.add_argument("--flavor", help="bert flavor in transformers model zoo", default=default_config.flavor, type=str)
     parser.add_argument("--max-length", help="maximum input length", default=default_config.max_length, type=int)
     parser.add_argument("--batch-size", help="size of batches", default=default_config.batch_size, type=int)
