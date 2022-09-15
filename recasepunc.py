@@ -1,25 +1,29 @@
-import sys
+# coding=utf-8
+
+"""recasepunc file."""
+
+import argparse
 import collections
 import os
+import random
+import sys
+import unicodedata
+
+import numpy as np
 import regex as re
-#from mosestokenizer import *
-from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-import random
-import unicodedata
-import numpy as np
-import argparse
 from torch.utils.data import TensorDataset, DataLoader
-
+# from mosestokenizer import *
+from tqdm import tqdm
 from transformers import AutoModel, AutoTokenizer, BertTokenizer
 
 default_config = argparse.Namespace(
     seed=871253,
     lang='fr',
-    #flavor='flaubert/flaubert_base_uncased',
+    # flavor='flaubert/flaubert_base_uncased',
     flavor=None,
     max_length=256,
     batch_size=16,
@@ -38,8 +42,10 @@ default_flavors = {
     'it': 'dbmdz/bert-base-italian-uncased',
 }
 
+
 class Config(argparse.Namespace):
     def __init__(self, **kwargs):
+        super().__init__()
         for key, value in default_config.__dict__.items():
             setattr(self, key, value)
         for key, value in kwargs.items():
@@ -50,8 +56,8 @@ class Config(argparse.Namespace):
         if 'lang' in kwargs and ('flavor' not in kwargs or kwargs['flavor'] is None):
             self.flavor = default_flavors[self.lang]
 
-        #print(self.lang, self.flavor)
-    
+        # print(self.lang, self.flavor)
+
 
 def init_random(seed):
     # make sure everything is deterministic
@@ -61,6 +67,7 @@ def init_random(seed):
     torch.cuda.manual_seed_all(seed)
     random.seed(seed)
     np.random.seed(seed)
+
 
 # NOTE: it is assumed in the implementation that y[:,0] is the punctuation label, and y[:,1] is the case label!
 
@@ -87,7 +94,10 @@ class Model(nn.Module):
         super().__init__()
         self.bert = AutoModel.from_pretrained(flavor)
         # need a proper way of determining representation size
-        size = self.bert.dim if hasattr(self.bert, 'dim') else self.bert.config.pooler_fc_size if hasattr(self.bert.config, 'pooler_fc_size') else self.bert.config.emb_dim if hasattr(self.bert.config, 'emb_dim') else self.bert.config.hidden_size
+        size = self.bert.dim \
+            if hasattr(self.bert, 'dim') else self.bert.config.pooler_fc_size \
+            if hasattr(self.bert.config, 'pooler_fc_size') else self.bert.config.emb_dim \
+            if hasattr(self.bert.config, 'emb_dim') else self.bert.config.hidden_size
         self.punc = nn.Linear(size, 5)
         self.case = nn.Linear(size, 4)
         self.dropout = nn.Dropout(0.3)
@@ -106,7 +116,7 @@ def drop_at_boundaries(rate, x, y, cls_token_id, sep_token_id, pad_token_id):
     for i, dropped in enumerate(torch.rand((len(x),)) < rate):
         if dropped:
             # select all indices that are sentence endings
-            indices = (y[i,:,0] > 1).nonzero(as_tuple=True)[0]
+            indices = (y[i, :, 0] > 1).nonzero(as_tuple=True)[0]
             if len(indices) < 2:
                 continue
             start = indices[0] + 1
@@ -134,8 +144,8 @@ def compute_performance(config, model, loader):
     for x, y in loader:
         x = x.long().to(device)
         y = y.long().to(device)
-        y1 = y[:,:,0]
-        y2 = y[:,:,1]
+        y1 = y[:, :, 0]
+        y2 = y[:, :, 1]
         with torch.no_grad():
             y_scores1, y_scores2 = model(x.to(device))
             loss1 = criterion(y_scores1.view(y1.size(0) * y1.size(1), -1), y1.view(y1.size(0) * y1.size(1)))
@@ -157,14 +167,15 @@ def compute_performance(config, model, loader):
             all_correct2 += (y_pred2 == y2).sum()
             total_loss += loss.item()
             num_loss += len(y)
-            num_perf += len(y) * config.max_length 
+            num_perf += len(y) * config.max_length
     recall = {}
     precision = {}
     fscore = {}
     for label in range(0, 5):
         recall[label] = num_correct[label] / num_ref[label] if num_ref[label] > 0 else 0
         precision[label] = num_correct[label] / num_hyp[label] if num_hyp[label] > 0 else 0
-        fscore[label] = (2 * recall[label] * precision[label] / (recall[label] + precision[label])).item() if recall[label] + precision[label] > 0 else 0
+        fscore[label] = (2 * recall[label] * precision[label] / (recall[label] + precision[label])).item() \
+            if recall[label] + precision[label] > 0 else 0
     return total_loss / num_loss, all_correct2.item() / num_perf, all_correct1.item() / num_perf, fscore
 
 
@@ -180,8 +191,8 @@ def fit(config, model, checkpoint_path, train_loader, valid_loader, iterations, 
             x = x.long().to(device)
             y = y.long().to(device)
             drop_at_boundaries(config.dab_rate, x, y, config.cls_token_id, config.sep_token_id, config.pad_token_id)
-            y1 = y[:,:,0]
-            y2 = y[:,:,1]
+            y1 = y[:, :, 0]
+            y2 = y[:, :, 1]
             optimizer.zero_grad()
             y_scores1, y_scores2 = model(x)
             loss1 = criterion(y_scores1.view(y1.size(0) * y1.size(1), -1), y1.view(y1.size(0) * y1.size(1)))
@@ -193,7 +204,8 @@ def fit(config, model, checkpoint_path, train_loader, valid_loader, iterations, 
             num += len(y)
             if iteration % valid_period == valid_period - 1:
                 train_loss = total_loss / num
-                valid_loss, valid_accuracy_case, valid_accuracy_punc, valid_fscore = compute_performance(config, model, valid_loader)
+                valid_loss, valid_accuracy_case, valid_accuracy_punc, valid_fscore = compute_performance(config, model,
+                                                                                                         valid_loader)
                 torch.save({
                     'iteration': iteration + 1,
                     'model_state_dict': model.state_dict(),
@@ -256,16 +268,16 @@ def run_eval(config, test_x_fn, test_y_fn, checkpoint_path):
 def recase(token, label):
     if label == case['LOWER']:
         return token.lower()
-    elif label == case['CAPITALIZE']:
+    if label == case['CAPITALIZE']:
         return token.lower().capitalize()
-    elif label == case['UPPER']:
+    if label == case['UPPER']:
         return token.upper()
-    else:
-        return token
+    return token
 
 
 class CasePuncPredictor:
-    def __init__(self, checkpoint_path, lang=default_config.lang, flavor=default_config.flavor, device=default_config.device):
+    def __init__(self, checkpoint_path, lang=default_config.lang, flavor=default_config.flavor,
+                 device=default_config.device):
         loaded = torch.load(checkpoint_path, map_location=device if torch.cuda.is_available() else 'cpu')
         if 'config' in loaded:
             self.config = Config(**loaded['config'])
@@ -286,12 +298,12 @@ class CasePuncPredictor:
     def predict(self, tokens, getter=lambda x: x):
         max_length = self.config.max_length
         device = self.config.device
-        if type(tokens) == str:
+        if isinstance(tokens, str):
             tokens = self.tokenize(tokens)
         previous_label = punctuation['PERIOD']
         for start in range(0, len(tokens), max_length):
             instance = tokens[start: start + max_length]
-            if type(getter(instance[0])) == str:
+            if isinstance(getter(instance[0]), str):
                 ids = self.config.tokenizer.convert_tokens_to_ids(getter(token) for token in instance)
             else:
                 ids = [getter(token) for token in instance]
@@ -301,11 +313,13 @@ class CasePuncPredictor:
             y_scores1, y_scores2 = self.model(x)
             y_pred1 = torch.max(y_scores1, 2)[1]
             y_pred2 = torch.max(y_scores2, 2)[1]
-            for i, id, token, punc_label, case_label in zip(range(len(instance)), ids, instance, y_pred1[0].tolist()[:len(instance)], y_pred2[0].tolist()[:len(instance)]):
+            for i, id, token, punc_label, case_label in zip(range(len(instance)), ids, instance,
+                                                            y_pred1[0].tolist()[:len(instance)],
+                                                            y_pred2[0].tolist()[:len(instance)]):
                 if id == cls_token_id or id == sep_token_id:
                     continue
-                if previous_label != None and previous_label > 1:
-                    if case_label in [case['LOWER'], case['OTHER']]: # LOWER, OTHER
+                if previous_label is not None and previous_label > 1:
+                    if case_label in [case['LOWER'], case['OTHER']]:  # LOWER, OTHER
                         case_label = case['CAPITALIZE']
                 if i + start == len(tokens) - 2 and punc_label == punctuation['O']:
                     punc_label = punctuation['PERIOD']
@@ -353,19 +367,20 @@ def generate_predictions(config, checkpoint_path):
         for start in range(0, len(tokens), config.max_length):
             instance = tokens[start: start + config.max_length]
             ids = config.tokenizer.convert_tokens_to_ids(instance)
-            #print(len(ids), file=sys.stderr)
+            # print(len(ids), file=sys.stderr)
             if len(ids) < config.max_length:
                 ids += [config.pad_token_id] * (config.max_length - len(ids))
             x = torch.tensor([ids]).long().to(config.device)
             y_scores1, y_scores2 = model(x)
             y_pred1 = torch.max(y_scores1, 2)[1]
             y_pred2 = torch.max(y_scores2, 2)[1]
-            for id, token, punc_label, case_label in zip(ids, instance, y_pred1[0].tolist()[:len(instance)], y_pred2[0].tolist()[:len(instance)]):
+            for id, token, punc_label, case_label in zip(ids, instance, y_pred1[0].tolist()[:len(instance)],
+                                                         y_pred2[0].tolist()[:len(instance)]):
                 if config.debug:
                     print(id, token, punc_label, case_label, file=sys.stderr)
-                if id == config.cls_token_id or id == config.sep_token_id:
+                if id in (config.cls_token_id, config.sep_token_id):
                     continue
-                if previous_label != None and previous_label > 1:
+                if previous_label is not None and previous_label > 1:
                     if case_label in [case['LOWER'], case['OTHER']]:
                         case_label = case['CAPITALIZE']
                 previous_label = punc_label
@@ -402,12 +417,11 @@ def label_for_case(token):
     token = re.sub('[^\p{Han}\p{Ll}\p{Lu}]', '', token)
     if token == token.lower():
         return 'LOWER'
-    elif token == token.lower().capitalize():
+    if token == token.lower().capitalize():
         return 'CAPITALIZE'
-    elif token == token.upper():
+    if token == token.upper():
         return 'UPPER'
-    else:
-        return 'OTHER'
+    return 'OTHER'
 
 
 def make_tensors(config, input_fn, output_x_fn, output_y_fn):
@@ -462,7 +476,7 @@ mapped_punctuation = {
     '└ ': 'COMMA',
     '_': 'O',
     '。': 'PERIOD',
-    '、': 'COMMA', # enumeration comma
+    '、': 'COMMA',  # enumeration comma
     '、': 'COMMA',
     '…': 'PERIOD',
     '—': 'COMMA',
@@ -484,10 +498,12 @@ mapped_punctuation = {
     '〕': 'COMMA',
 }
 
+
 def preprocess_text(config, max_token_count=-1):
     global num_tokens_output
     max_token_count = int(max_token_count)
     num_tokens_output = 0
+
     def process_segment(text, punctuation):
         global num_tokens_output
         text = text.replace('\t', ' ')
@@ -500,7 +516,7 @@ def preprocess_text(config, max_token_count=-1):
                 print(token.lower(), case_label, 'O', sep='\t')
             num_tokens_output += 1
             # a bit too ugly, but alternative is to throw an exception
-            if max_token_count > 0 and num_tokens_output >= max_token_count:
+            if 0 < max_token_count <= num_tokens_output:
                 sys.exit(0)
 
     for line in sys.stdin:
@@ -532,23 +548,23 @@ def preprocess_text_old_fr(config):
                 previous_token = None
                 for token in tokens:
                     if token in mapped_punctuation:
-                        if previous_token != None:
+                        if previous_token is not None:
                             print(previous_token, mapped_punctuation[token], sep='\t')
                         previous_token = None
-                    elif not re.search('[\p{Han}\p{Ll}\p{Lu}\d]', token): # remove non-alphanumeric tokens
+                    elif not re.search('[\p{Han}\p{Ll}\p{Lu}\d]', token):  # remove non-alphanumeric tokens
                         continue
                     else:
-                        if previous_token != None:
+                        if previous_token is not None:
                             print(previous_token, 'O', sep='\t')
                         previous_token = token
-                if previous_token != None:
+                if previous_token is not None:
                     print(previous_token, 'PERIOD', sep='\t')
-            
+
 
 # modification of the wordpiece tokenizer to keep case information even if vocab is lower cased
 # forked from https://github.com/huggingface/transformers/blob/master/src/transformers/models/bert/tokenization_bert.py
 
-class WordpieceTokenizer(object):
+class WordpieceTokenizer:
     """Runs WordPiece tokenization."""
 
     def __init__(self, vocab, unk_token, max_input_chars_per_word=100, keep_case=True):
@@ -608,8 +624,8 @@ class WordpieceTokenizer(object):
 # forked from https://github.com/huggingface/transformers/blob/cd56f3fe7eae4a53a9880e3f5e8f91877a78271c/src/transformers/models/xlm/tokenization_xlm.py
 def bpe(self, token):
     def to_lower(pair):
-      #print('  ',pair)
-      return (pair[0].lower(), pair[1].lower())
+        # print('  ',pair)
+        return (pair[0].lower(), pair[1].lower())
 
     from transformers.models.xlm.tokenization_xlm import get_pairs
 
@@ -623,7 +639,7 @@ def bpe(self, token):
 
     while True:
         bigram = min(pairs, key=lambda pair: self.bpe_ranks.get(to_lower(pair), float("inf")))
-        #print(bigram)
+        # print(bigram)
         if to_lower(bigram) not in self.bpe_ranks:
             break
         first, second = bigram
@@ -649,8 +665,7 @@ def bpe(self, token):
         word = new_word
         if len(word) == 1:
             break
-        else:
-            pairs = get_pairs(word)
+        pairs = get_pairs(word)
     word = " ".join(word)
     if word == "\n  </w>":
         word = "\n</w>"
@@ -658,10 +673,9 @@ def bpe(self, token):
     return word
 
 
-
 def init(config):
     init_random(config.seed)
-    
+
     if config.lang == 'fr':
         config.tokenizer = tokenizer = AutoTokenizer.from_pretrained(config.flavor, do_lower_case=False)
 
@@ -673,10 +687,10 @@ def init(config):
         tokenizer.bpe = types.MethodType(bpe, tokenizer)
     else:
         # warning: needs to be BertTokenizer for monkey patching to work
-        config.tokenizer = tokenizer = BertTokenizer.from_pretrained(config.flavor, do_lower_case=False) 
+        config.tokenizer = tokenizer = BertTokenizer.from_pretrained(config.flavor, do_lower_case=False)
 
-        # warning: monkey patch tokenizer to keep case information 
-        #from recasing_tokenizer import WordpieceTokenizer
+        # warning: monkey patch tokenizer to keep case information
+        # from recasing_tokenizer import WordpieceTokenizer
         config.tokenizer.wordpiece_tokenizer = WordpieceTokenizer(vocab=tokenizer.vocab, unk_token=tokenizer.unk_token)
 
     if config.lang == 'fr':
@@ -695,7 +709,7 @@ def init(config):
     if not torch.cuda.is_available() and config.device == 'cuda':
         print('WARNING: reverting to cpu as cuda is not available', file=sys.stderr)
     config.device = torch.device(config.device if torch.cuda.is_available() else 'cpu')
-    
+
 
 def main(config, action, args):
     init(config)
@@ -704,15 +718,16 @@ def main(config, action, args):
         train(config, *args)
     elif action == 'eval':
         run_eval(config, *args)
-    elif action == 'predict': 
+    elif action == 'predict':
         generate_predictions(config, *args)
     elif action == 'tensorize':
         make_tensors(config, *args)
     elif action == 'preprocess':
         preprocess_text(config, *args)
     else:
-        print('invalid action "%s"' % action)
-        sys.exit(1) 
+        print(f'invalid action "{action}"')
+        sys.exit(1)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -720,17 +735,17 @@ if __name__ == '__main__':
     parser.add_argument("action_args", help="arguments for selected action", type=str, nargs='*')
     parser.add_argument("--seed", help="random seed", default=default_config.seed, type=int)
     parser.add_argument("--lang", help="language (fr, en, zh, it)", default=default_config.lang, type=str)
-    parser.add_argument("--flavor", help="bert flavor in transformers model zoo", default=default_config.flavor, type=str)
+    parser.add_argument("--flavor", help="bert flavor in transformers model zoo", default=default_config.flavor,
+                        type=str)
     parser.add_argument("--max-length", help="maximum input length", default=default_config.max_length, type=int)
     parser.add_argument("--batch-size", help="size of batches", default=default_config.batch_size, type=int)
     parser.add_argument("--device", help="computation device (cuda, cpu)", default=default_config.device, type=str)
     parser.add_argument("--debug", help="whether to output more debug info", default=default_config.debug, type=bool)
-    parser.add_argument("--updates", help="number of training updates to perform", default=default_config.updates, type=bool)
+    parser.add_argument("--updates", help="number of training updates to perform", default=default_config.updates,
+                        type=bool)
     parser.add_argument("--period", help="validation period in updates", default=default_config.period, type=bool)
     parser.add_argument("--lr", help="learning rate", default=default_config.lr, type=bool)
     parser.add_argument("--dab-rate", help="drop at boundaries rate", default=default_config.dab_rate, type=bool)
     config = Config(**parser.parse_args().__dict__)
 
     main(config, config.action, config.action_args)
-
-
