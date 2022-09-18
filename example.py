@@ -1,8 +1,11 @@
 import sys
-from recasepunc import CasePuncPredictor, \
-    WordpieceTokenizer  # WordpieceTokenizer is necessary for flavors other than fr
+from os import getenv
+from os.path import join
 
-predictor = CasePuncPredictor('it.22000')
+from recasepunc import CasePuncPredictor, \
+    WordpieceTokenizer  # WordpieceTokenizer is necessary for flavors other than "fr"
+
+predictor = CasePuncPredictor(join('checkpoint', getenv('LANG')))
 
 text = ' '.join(sys.argv[1:])
 tokens = list(enumerate(predictor.tokenize(text)))
