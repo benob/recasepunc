@@ -55,6 +55,19 @@ Models
 
 All models are trained from the 1st 100M tokens from [Common Crawl](http://data.statmt.org/cc-100/)
 
+[checkpoints/it.22000](https://github.com/CoffeePerry/recasepunc/releases/download/v0.1.0/it.22000)
+```
+{
+  "iteration": "22000",
+  "train_loss": "0.058934884114190934",
+  "valid_loss": "0.06988634882792658",
+  "valid_accuracy_case": "0.9575860089785607",
+  "valid_accuracy_punc": "0.940614491584733",
+  "valid_fscore": "{0: 0.6431694030761719, 1: 0.6150795817375183, 2: 0.7023577094078064, 3: 0.5514711737632751, 4: 0.21250930428504944}",
+  "config": "{'seed': 871253, 'lang': 'it', 'flavor': 'dbmdz/bert-base-italian-uncased', 'max_length': 256, 'batch_size': 4, 'updates': 24000, 'period': 1000, 'lr': 1e-05, 'dab_rate': 0.1, 'device': device(type='cuda'), 'debug': False, 'action': 'train', 'action_args': ['data/it-100M.train.x', 'data/it-100M.train.y', 'data/it-100M.valid.x', 'data/it-100M.valid.y', 'checkpoints/it'], 'pad_token_id': 0, 'cls_token_id': 102, 'cls_token': '[CLS]', 'sep_token_id': 103, 'sep_token': '[SEP]'}"
+}
+```
+
 [checkpoints/zh.24000](https://github.com/benob/recasepunc/releases/download/0.3/zh.24000)
 ```
 {
