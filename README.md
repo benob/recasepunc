@@ -1,6 +1,6 @@
 Recasing and punctuation model based on Bert
 ============================================
-Benoit Favre 2021
+Benoit Favre 2021-2024
 
 
 This system converts a sequence of lowercase tokens without punctuation to a sequence of cased tokens with punctuation.
@@ -27,6 +27,7 @@ uniformly a length and replacing all tokens and labels after that point with
 padding (called Cut-drop).
 
 Changelog:
+* v0.4: Retrain with latest transformers
 * Add support for Zh and En models
 * Fix generation when input is smaller than max length
 
@@ -120,7 +121,7 @@ Stage 1: tokenize and normalize text with Moses tokenizer, and extract recasing 
 python recasepunc.py preprocess --lang $LANG < input.txt > input.case+punc
 ```
 
-Stage 2: sub-tokenize with Flaubert tokenizer, and generate pytorch tensors
+Stage 2: sub-tokenize with Flaubert/moses tokenizer, and generate pytorch tensors
 ```
 python recasepunc.py tensorize input.case+punc input.case+punc.x input.case+punc.y --lang $LANG
 ```
@@ -134,6 +135,14 @@ Stage 4: evaluate performance on a test set
 ```
 python recasepunc.py eval test.x test.y checkpoint/path.iteration
 ```
+
+Two scripts used to create the models are given as example of how to train for a new language:
+* `./prepare.sh <lang>` for downloading data, creating sets, and preprocessing
+* `./train.sh <lang>` for trainging the model
+Both assume the availability of a `env.sh` script for loading the environment and setting up stuff.
+`requirements.freeze.txt` contains the package versions used for training.
+
+You will need to modify recasepunc.py and set the BERT flavior for the new language and check that the tokenizer correctly handles punctuation. For French, we had to patch the tokenizer to keep input/punctuation synchronized.
 
 Notes
 -----

@@ -39,6 +39,8 @@ default_flavors = {
     'fr': 'flaubert/flaubert_base_uncased',
     'en': 'bert-base-uncased',
     'zh': 'ckiplab/bert-base-chinese',
+    'zh-Hant': 'ckiplab/bert-base-chinese',
+    'zh-Hans': 'ckiplab/bert-base-chinese',
     'it': 'dbmdz/bert-base-italian-uncased',
 }
 
@@ -51,7 +53,7 @@ class Config(argparse.Namespace):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-        assert self.lang in ['fr', 'en', 'zh', 'it']
+        assert self.lang in ['fr', 'en', 'zh', 'zh-Hant', 'zh-Hans', 'it']
 
         if 'lang' in kwargs and ('flavor' not in kwargs or kwargs['flavor'] is None):
             self.flavor = default_flavors[self.lang]
@@ -680,7 +682,8 @@ def init(config):
         config.tokenizer = tokenizer = AutoTokenizer.from_pretrained(config.flavor, do_lower_case=False)
 
         from transformers.models.xlm.tokenization_xlm import XLMTokenizer
-        assert isinstance(tokenizer, XLMTokenizer)
+        from transformers.models.flaubert.tokenization_flaubert import FlaubertTokenizer
+        assert isinstance(tokenizer, XLMTokenizer) or isinstance(tokenizer, FlaubertTokenizer)
 
         # monkey patch XLM tokenizer
         import types
